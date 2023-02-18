@@ -1,0 +1,5 @@
+\ohm Ω
+\omega Ω
+\mu μ
+\pi π
+\refresh REFRESH
