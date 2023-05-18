@@ -3,12 +3,12 @@ import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 
 import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.KeyEvent;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.TreeMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,7 +16,7 @@ public class Assistant implements NativeKeyListener {
     static Robot robot;
     static boolean canUse=true;
     static LinkedList<Integer> prev = new LinkedList<>();
-    static TreeMap<String, String> map = StringMap.MAP;
+    static Map<String, String> map = StringMap.MAP;
     static{
         try {
             robot = new Robot();
@@ -24,26 +24,34 @@ public class Assistant implements NativeKeyListener {
             e.printStackTrace();
         }
     }
+
+    public void backspace(int amount){
+        for (int i = 0; i < amount; i++) press(KeyEvent.VK_BACK_SPACE);
+    }
+
     static void press(int keycode){
         robot.keyPress(keycode);
-        robot.delay(1);
+        robot.delay(5);
         robot.keyRelease(keycode);
-        robot.delay(1);
+        robot.delay(5);
     }
     public void nativeKeyPressed(NativeKeyEvent e) {
         if (!canUse) return;
 
         prev.add(e.getRawCode());
 
-        if (prev.size() > StringMap.MAX_LENGTH)
-            prev.pop();
+        if (prev.size() > StringMap.MAX_LENGTH) prev.pop();
 
-        String res = stringToCopy();
+        String res = getKey();
         if (res != null) {
             canUse = false;
             if (res.equals("ÜREFRESH")) {
-                StringMap.refresh();
                 backspace(8);
+                robot.delay(100);
+                StringMap.refresh();
+            } else if (res.equals("ÜEXIT")) {
+                backspace(5);
+                System.exit(0);
             }
             else copyAndPaste(res);
             prev.clear();
@@ -51,7 +59,7 @@ public class Assistant implements NativeKeyListener {
         }
     }
 
-    public String stringToCopy(){
+    public String getKey(){
         String construct = "";
         Iterator<Integer> iterator = prev.descendingIterator();
         while (iterator.hasNext()){
@@ -59,10 +67,6 @@ public class Assistant implements NativeKeyListener {
             if (map.containsKey(construct)) return construct;
         }
         return null;
-    }
-
-    public void backspace(int amount){
-        for (int i = 0; i < amount; i++) press(KeyEvent.VK_BACK_SPACE);
     }
 
     public void paste(){
@@ -76,9 +80,7 @@ public class Assistant implements NativeKeyListener {
     public void copyAndPaste(String key){
         try {
             String string = map.get(key);
-//            System.out.println("copyAndPaste called");
-            String prevContents = (String)
-                    Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+            Transferable prevContents = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
 
             StringSelection selection = new StringSelection(string);
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
@@ -87,15 +89,10 @@ public class Assistant implements NativeKeyListener {
             backspace(key.length());
             paste();
 
-
             robot.delay(100);
 
-
-            StringSelection prevSelection = new StringSelection(prevContents);
-            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(prevSelection, prevSelection);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
+            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(prevContents, null);
+        } catch (Exception ignored) {}
     }
 
     public static void main(String[] args) {

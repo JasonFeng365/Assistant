@@ -1,9 +1,12 @@
-import java.io.File;
-import java.util.Scanner;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.TreeMap;
 
 public class StringMap {
-    public static final TreeMap<String, String> MAP = new TreeMap<>();
+    public static final Map<String, String> MAP = new TreeMap<>();
     public static int MAX_LENGTH = 0;
     static{
         refresh();
@@ -11,13 +14,20 @@ public class StringMap {
 
     public static void refresh(){
         try{
-            Scanner scanner = new Scanner(new File("Keys.txt"));
+            BufferedReader scanner = new BufferedReader(new InputStreamReader(
+                    new FileInputStream("Keys.txt"), StandardCharsets.UTF_8));
             MAP.clear();
             MAX_LENGTH = 0;
-            while (scanner.hasNextLine()){
-                String[] split = scanner.nextLine().split(" ");
-                MAP.put(split[0].toUpperCase().replace('\\', 'Ü'), split[1]);
+            String line = scanner.readLine();
+            while (line!=null){
+                String[] split = line.split(" ");
+                String key = split[0].toUpperCase().replace('\\', 'Ü');
+                String value = split[1];
+                MAP.put(key, value);
+                System.out.println(line);
                 if (split[0].length() > MAX_LENGTH) MAX_LENGTH = split[0].length();
+
+                line = scanner.readLine();
             }
             System.out.println("Map refreshed!");
         } catch (Exception e){
