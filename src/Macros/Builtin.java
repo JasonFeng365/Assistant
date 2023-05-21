@@ -10,8 +10,8 @@ public class Builtin {
                 "\\exit",
         };
         macros = new Macro[]{
-                robot->StringMap.refresh(),
-                robot->System.exit(0),
+                robot -> StringMap.refresh(),
+                robot -> System.exit(0),
         };
         int max = 0;
         for (String s : commandNames) if (s.length()>max) max = s.length();

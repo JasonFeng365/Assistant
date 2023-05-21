@@ -4,6 +4,7 @@ public class KeyPress implements Command {
     private final KeyDown down;
     private final KeyUp up;
     private final int delay;
+
     public KeyPress(int keycode){
         down = new KeyDown(keycode);
         up = new KeyUp(keycode);
