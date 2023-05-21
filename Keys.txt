@@ -2,5 +2,3 @@
 \omega Ω
 \mu μ
 \pi π
-\exit EXIT
-\refresh REFRESH
