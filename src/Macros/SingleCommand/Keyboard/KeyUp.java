@@ -16,4 +16,9 @@ public class KeyUp implements Command {
         robot.keyRelease(keycode);
         robot.delay(delay);
     }
+
+    @Override
+    public String toString() {
+        return String.format("%d.%c.%d",keycode, MacroEvent.KEYUP, delay);
+    }
 }

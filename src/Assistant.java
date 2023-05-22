@@ -6,11 +6,10 @@ import org.jnativehook.mouse.NativeMouseEvent;
 import org.jnativehook.mouse.NativeMouseListener;
 
 import java.awt.*;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Stack;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,22 +19,27 @@ public class Assistant implements NativeKeyListener, NativeMouseListener {
     private final LinkedList<Integer> prev = new LinkedList<>();
     private final Map<String, Macro> map = StringMap.MAP;
 
-    private long prevTime, curTime;
-    private final Queue<MacroEvent> eventQueue = new LinkedList<>();
+    private long prevTime;
+    private final ArrayList<MacroEvent> eventQueue = new ArrayList<>();
 
     private int getDelay(){
-        curTime = System.currentTimeMillis();
+        long curTime = System.currentTimeMillis();
         int delay = (int)(curTime - prevTime);
         prevTime = curTime;
         return delay;
     }
+
 
     public Assistant(Robot robot){
         this.robot = robot;
     }
 
     public void nativeKeyPressed(NativeKeyEvent e) {
-        if (recording) eventQueue.add(new MacroEvent(MacroEvent.Event.KEYDOWN, e.getRawCode(), getDelay()));
+//        System.out.println(e.getKeyChar());
+//        System.out.println(e.getKeyCode());
+//        System.out.println(e.getRawCode());
+
+        if (recording) eventQueue.add(new MacroEvent(MacroEvent.KEYDOWN, e.getKeyCode(), getDelay()));
 
         if (!canUse) return;
 
@@ -58,8 +62,16 @@ public class Assistant implements NativeKeyListener, NativeMouseListener {
         while (iterator.hasNext()){
             construct = ((char)((int)iterator.next()))+construct;
             if (construct.equals("ÜRECORD")){
+                Backspace.backSpace(robot, 7);
                 recording = !recording;
                 prevTime = System.currentTimeMillis();
+
+                if (!recording) {
+                    System.out.println(MacroBuilder.parse(eventQueue));
+                    eventQueue.clear();
+                } else {
+                    System.out.println("Recording");
+                }
                 return null;
             }
 
@@ -76,7 +88,9 @@ public class Assistant implements NativeKeyListener, NativeMouseListener {
             Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
             logger.setLevel(Level.OFF);
             GlobalScreen.registerNativeHook();
-            GlobalScreen.addNativeKeyListener(new Assistant(new Robot()));
+            Assistant assistant = new Assistant(new Robot());
+            GlobalScreen.addNativeKeyListener(assistant);
+            GlobalScreen.addNativeMouseListener(assistant);
 
         }
         catch (Exception ex) {
@@ -85,23 +99,25 @@ public class Assistant implements NativeKeyListener, NativeMouseListener {
         }
     }
     public void nativeKeyReleased(NativeKeyEvent e) {
-        if (recording) eventQueue.add(new MacroEvent(MacroEvent.Event.KEYUP, e.getRawCode(), getDelay()));
+        if (recording) eventQueue.add(new MacroEvent(MacroEvent.KEYUP, e.getKeyCode(), getDelay()));
     }
     public void nativeKeyTyped(NativeKeyEvent e) {}
 
     @Override
-    public void nativeMouseClicked(NativeMouseEvent e) {
-
-        if (recording) eventQueue.add(
-                new MacroMouseEvent(MacroEvent.Event.MOUSEDOWN, e.getButton(), e.getX(), e.getY(), getDelay()));
-    }
+    public void nativeMouseClicked(NativeMouseEvent e) {}
 
     @Override
-    public void nativeMousePressed(NativeMouseEvent e) {}
+    public void nativeMousePressed(NativeMouseEvent e) {
+//        NativeMouseEvent.BUTTON2_MASK
+//        InputEvent.MASK
+//        System.out.println(e.getButton());
+        if (recording) eventQueue.add(
+                new MacroMouseEvent(MacroEvent.MOUSEDOWN, 1<<(e.getButton()+9), e.getX(), e.getY(), getDelay()));
+    }
 
     @Override
     public void nativeMouseReleased(NativeMouseEvent e) {
         if (recording) eventQueue.add(
-                new MacroMouseEvent(MacroEvent.Event.MOUSEUP, e.getButton(), e.getX(), e.getY(), getDelay()));
+                new MacroMouseEvent(MacroEvent.MOUSEUP, 1<<(e.getButton()+9), e.getX(), e.getY(), getDelay()));
     }
 }

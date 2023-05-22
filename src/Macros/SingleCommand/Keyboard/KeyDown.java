@@ -16,4 +16,9 @@ public class KeyDown implements Command {
         robot.keyPress(keycode);
         robot.delay(delay);
     }
+
+    @Override
+    public String toString() {
+        return String.format("%d.%c.%d",keycode, MacroEvent.KEYDOWN, delay);
+    }
 }
